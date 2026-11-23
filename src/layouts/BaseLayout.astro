@@ -1,0 +1,42 @@
+---
+import '../styles/global.css';
+import Masthead, { type Tab } from '../components/Masthead.astro';
+import Footer from '../components/Footer.astro';
+import { defaultLang, t } from '../i18n/ui';
+import { url } from '../lib/url';
+
+interface Props {
+  active: Tab;
+  title?: string;
+  description?: string;
+}
+
+const { active, title, description = t('site.description') } = Astro.props;
+const siteName = t('site.title');
+const fullTitle = title ? `${title} · ${siteName}` : siteName;
+---
+
+<!doctype html>
+<html lang={defaultLang === 'pt' ? 'pt-BR' : defaultLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f3ecdc" />
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+  </head>
+  <body>
+    <Masthead active={active} />
+    <main class="container">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style>
+  main { padding-top: 56px; }
+</style>

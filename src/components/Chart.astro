@@ -1,0 +1,72 @@
+---
+/**
+ * A numbered, LaTeX-style figure holding one interactive chart.
+ *
+ *   <Chart name="partner-share" data={partnerShare} caption="…" />
+ *
+ * `name` picks a builder from src/charts/index.ts. Optional controls go in the
+ * "controls" slot as <select data-control="x"> or
+ * <button data-control="x" data-value="…" aria-pressed="true|false">.
+ */
+interface Props {
+  name: string;
+  data: unknown;
+  caption: string;
+  height?: number;
+  /** marks the figure as using provisional random data */
+  placeholder?: boolean;
+}
+const { name, data, caption, height = 420, placeholder = true } = Astro.props;
+---
+
+<figure class="figure" data-chart-root>
+  {Astro.slots.has('controls') && <div class="controls"><slot name="controls" /></div>}
+  <div
+    class="chart"
+    data-chart={name}
+    data-payload={JSON.stringify(data)}
+    style={`height:${height}px`}
+    role="img"
+    aria-label={caption}
+  >
+  </div>
+  <figcaption>
+    <span class="label">Figura <span class="num"></span>.</span>
+    {caption}
+    {placeholder && <span class="ph">(dados ilustrativos)</span>}
+  </figcaption>
+</figure>
+
+<script>
+  import '../scripts/charts';
+</script>
+
+<style>
+  .figure {
+    counter-increment: figure;
+    margin: 2em 0 2.4em;
+  }
+  .controls {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    font-size: 0.92rem;
+  }
+  .chart { width: 100%; }
+  @media (max-width: 640px) {
+    .chart { height: 340px !important; }
+  }
+  figcaption {
+    margin: 10px auto 0;
+    max-width: 62ch;
+    font-size: 0.95rem;
+    text-align: center;
+    line-height: 1.45;
+  }
+  .label { font-weight: 700; margin-right: 0.35em; }
+  .ph { margin-left: 0.3em; }
+  .num::before { content: counter(figure); }
+  .ph { color: var(--muted); font-style: italic; }
+</style>

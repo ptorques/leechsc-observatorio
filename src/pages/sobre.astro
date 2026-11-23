@@ -1,0 +1,83 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { team } from '../data/team';
+import { url } from '../lib/url';
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+---
+
+<BaseLayout active="about" title="Sobre nós">
+  <article class="about">
+    <section class="measure intro">
+      <p class="lead">
+        Somos um laboratório de pesquisa sediado na <strong>Universidade Federal de Santa Catarina
+        (UFSC)</strong>, vinculado ao <strong>Instituto I-Chin</strong>.
+      </p>
+      <p>
+        <em>Texto provisório.</em> Estudamos as relações econômicas entre Santa Catarina e a China
+        e a economia política chinesa, combinando dados, métodos quantitativos e perspectiva
+        histórica.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="measure">Equipe</h2>
+      <ul class="team">
+        {
+          team.map((m) => (
+            <li>
+              {m.photo ? (
+                <img class="photo" src={url(`/team/${m.photo}`)} alt={m.name} width="160" height="160" loading="lazy" />
+              ) : (
+                <span class="photo initials" aria-hidden="true">{initials(m.name)}</span>
+              )}
+              <span class="name">{m.link ? <a href={m.link}>{m.name}</a> : m.name}</span>
+              <span class="role smallcaps">{m.role}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .about > section { margin-left: auto; margin-right: auto; }
+  .intro { margin-bottom: 3.5em; }
+  .lead { font-size: 1.3rem; line-height: 1.5; }
+  h2.measure { margin: 0 auto 1.2em; }
+  .team {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 40px 24px;
+  }
+  .team li { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .photo {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    filter: sepia(0.15);
+  }
+  .initials {
+    display: grid;
+    place-items: center;
+    background: var(--bg-deep);
+    color: var(--red);
+    font-size: 2.2rem;
+  }
+  .name { font-weight: 700; }
+  .role { color: var(--green); font-size: 0.95rem; }
+</style>

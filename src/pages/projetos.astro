@@ -1,0 +1,82 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Chart from '../components/Chart.astro';
+import { projectData, sectorRadar, officialsEvent } from '../data/placeholder';
+
+const projects = (await getCollection('projects', (p) => p.data.active)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (await render(p)).Content })));
+---
+
+<BaseLayout active="projects" title="Projetos">
+  <div class="numbered">
+    {
+      rendered.map(({ p, Content }, i) => (
+        <section class:list={['project', { flip: i % 2 === 1 }]} id={p.id}>
+          <div class="viz">
+            <Chart name={p.data.chart} data={projectData[p.data.chart]} caption={p.data.caption} height={380}>
+              {p.data.chart === 'sector-radar' && (
+                <label slot="controls">
+                  Comparar com{' '}
+                  <select data-control="province">
+                    {sectorRadar.provinces.map((pr) => (
+                      <option value={pr.name}>{pr.name}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {p.data.chart === 'officials-event' && (
+                <div slot="controls" role="group" aria-label="Cargo">
+                  {Object.entries(officialsEvent.officials).map(([key, o], k) => (
+                    <button class="btn" type="button" data-control="official" data-value={key} aria-pressed={k === 0 ? 'true' : 'false'}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Chart>
+          </div>
+          <div class="text justify">
+            <h2>{p.data.title}</h2>
+            {p.data.authors.length > 0 && <p class="authors smallcaps">{p.data.authors.join(', ')}</p>}
+            <Content />
+            {p.data.article ? (
+              <a class="article" href={p.data.article} target="_blank" rel="noopener">
+                Ler o artigo →
+              </a>
+            ) : (
+              <span class="article pending">Artigo em preparação</span>
+            )}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .project {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: center;
+    padding: 40px 0;
+  }
+  .project + .project { border-top: 1px solid var(--border); }
+  .project.flip .viz { order: 2; }
+  .viz :global(.figure) { margin: 0; }
+  .text h2 { font-size: 1.45rem; }
+  @media (min-width: 641px) {
+    .text :global(p) { text-align: justify; }
+  }
+  .authors { color: var(--green); margin-top: -0.4em; }
+  .article { display: inline-block; margin-top: 0.4em; font-weight: 700; }
+  .pending { color: var(--muted); font-weight: 400; font-style: italic; }
+  label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); }
+  @media (max-width: 860px) {
+    .project { grid-template-columns: 1fr; gap: 20px; }
+    .project.flip .viz { order: 0; }
+  }
+</style>

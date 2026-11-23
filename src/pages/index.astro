@@ -1,0 +1,116 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Chart from '../components/Chart.astro';
+import {
+  exportSankey,
+  importTreemap,
+  kpis,
+  partnerShare,
+  provinceBubble,
+} from '../data/placeholder';
+---
+
+<BaseLayout active="raison" title="Raison d’être">
+  <article class="numbered">
+    <section class="abstract">
+      <span class="abstract-title smallcaps">Resumo</span>
+      <p>
+        <em>Texto provisório.</em> Em pouco mais de duas décadas, a China passou de parceiro
+        marginal a principal parceira comercial de Santa Catarina. Esta página reúne as evidências
+        que motivam o laboratório: a escala dessa relação, sua composição e o que ela significa para
+        a economia catarinense.
+      </p>
+      <p class="note">Todas as visualizações desta página usam dados aleatórios provisórios.</p>
+    </section>
+
+    <section class="sec">
+      <h2>O principal parceiro</h2>
+      <div class="measure">
+        <p><em>Texto a desenvolver:</em> a ascensão da China no comércio exterior catarinense.</p>
+      </div>
+      <dl class="kpis">
+        {
+          kpis.map((k) => (
+            <div>
+              <dt>{k.value}</dt>
+              <dd>{k.label}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <Chart
+        name="partner-share"
+        data={partnerShare}
+        caption="Participação dos principais parceiros na corrente de comércio de Santa Catarina, 2000–2024 (%)."
+      />
+    </section>
+
+    <section class="sec">
+      <h2>Uma província entre províncias</h2>
+      <div class="measure">
+        <p>
+          <em>Texto a desenvolver:</em> em população e renda, Santa Catarina é comparável a uma
+          província chinesa, o que torna a comparação direta possível e informativa.
+        </p>
+      </div>
+      <Chart
+        name="province-bubble"
+        data={provinceBubble}
+        height={460}
+        caption="PIB per capita e crescimento médio das províncias chinesas e de Santa Catarina; o tamanho do círculo indica a população. Passe o cursor sobre um círculo para ver a província e use a roda do mouse para aproximar."
+      />
+    </section>
+
+    <section class="sec">
+      <h2>Para onde vão nossas exportações</h2>
+      <div class="measure">
+        <p>
+          <em>Texto a desenvolver:</em> a China absorve parcela dominante das principais
+          exportações do estado.
+        </p>
+      </div>
+      <Chart
+        name="export-sankey"
+        data={exportSankey}
+        height={480}
+        caption="Fluxo das exportações catarinenses por produto e destino (US$ milhões). Passe o cursor sobre um produto ou destino para destacar seus fluxos."
+      />
+    </section>
+
+    <section class="sec">
+      <h2>O que compramos da China</h2>
+      <div class="measure">
+        <p>
+          <em>Texto a desenvolver:</em> as importações de origem chinesa e o seu papel nas cadeias
+          produtivas do estado.
+        </p>
+      </div>
+      <Chart
+        name="import-treemap"
+        data={importTreemap}
+        height={460}
+        caption="Composição das importações de Santa Catarina provenientes da China (US$ milhões). Clique em uma categoria para ver seus produtos."
+      />
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .sec { margin-top: 3.5em; }
+  .sec > h2, .sec > .measure { max-width: var(--measure); margin-left: auto; margin-right: auto; }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    margin: 2em 0 0;
+    border-top: 1px solid var(--text);
+    border-bottom: 1px solid var(--text);
+  }
+  .kpis div { padding: 18px 16px; text-align: center; }
+  .kpis div + div { border-left: 1px solid var(--border); }
+  .kpis dt { font-size: 2.1rem; color: var(--red); line-height: 1.1; }
+  .kpis dd { margin: 6px 0 0; font-size: 0.92rem; color: var(--muted); }
+  @media (max-width: 640px) {
+    .kpis div + div { border-left: 0; border-top: 1px solid var(--border); }
+  }
+</style>

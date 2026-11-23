@@ -1,0 +1,46 @@
+---
+import { defaultLang, languages, t } from '../i18n/ui';
+
+const current = defaultLang;
+---
+
+<nav class="lang" aria-label="Idioma">
+  {
+    languages.map((l, i) => (
+      <>
+        {i > 0 && <span class="sep" aria-hidden="true">·</span>}
+        {l.code === current ? (
+          <span class="item current" aria-current="true" lang={l.code} title={l.name}>
+            {l.label}
+          </span>
+        ) : (
+          <span
+            class="item"
+            aria-disabled={l.ready ? undefined : 'true'}
+            lang={l.code}
+            title={l.ready ? l.name : `${l.name} · ${t('lang.soon')}`}
+          >
+            {l.label}
+          </span>
+        )}
+      </>
+    ))
+  }
+</nav>
+
+<style>
+  .lang {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    view-transition-name: lang-switcher;
+  }
+  .item { color: var(--muted); padding: 2px 2px; }
+  .item[aria-disabled='true'] { opacity: 0.55; cursor: not-allowed; }
+  .current { color: var(--text); border-bottom: 1.5px solid var(--red); }
+  .sep { color: var(--border); }
+</style>
