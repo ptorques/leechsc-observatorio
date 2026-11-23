@@ -9,7 +9,7 @@ function controlValue(root: HTMLElement, name: string): string | undefined {
   return root.querySelector<HTMLElement>(`button[data-control="${name}"][aria-pressed="true"]`)?.dataset.value;
 }
 
-function init(root: HTMLElement) {
+async function init(root: HTMLElement) {
   const el = root.querySelector<HTMLElement>('[data-chart]');
   if (!el) return;
   const build = builders[el.dataset.chart ?? ''];
@@ -17,9 +17,11 @@ function init(root: HTMLElement) {
     console.warn(`Unknown chart "${el.dataset.chart}"`);
     return;
   }
+  await build.prepare?.();
   const data = JSON.parse(el.dataset.payload ?? 'null');
-  const ctx = { data, root, control: (name: string) => controlValue(root, name) };
-  const rerender = mountChart(el, (t) => build(ctx, t));
+  const ctx = { data, root, control: (name: string) => controlValue(root, name), state: {} };
+  const { chart, rerender } = mountChart(el, (t) => build(ctx, t), { rebuildOnResize: !!build.rebuildOnResize });
+  build.setup?.(chart, ctx, rerender);
 
   root.querySelectorAll<HTMLElement>('[data-control]').forEach((c) => {
     if (c instanceof HTMLSelectElement) {
@@ -41,12 +43,10 @@ const observer = new IntersectionObserver(
       if (!e.isIntersecting) continue;
       observer.unobserve(e.target);
       // one broken chart must not stop the others from mounting
-      try {
-        init(e.target as HTMLElement);
-      } catch (err) {
+      init(e.target as HTMLElement).catch((err) => {
         console.error(err);
         (e.target as HTMLElement).dataset.chartError = String(err);
-      }
+      });
     }
   },
   { threshold: 0.15 },

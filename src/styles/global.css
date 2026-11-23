@@ -48,7 +48,7 @@
   --taupe: #a39079;
 
   --serif: 'Latin Modern', 'CMU Serif', 'Computer Modern Serif', 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, serif;
-  --measure: 42rem; /* text column width (rem, so headings and body align) */
+  --measure: 50rem; /* text column (body, captions, KPI boxes); charts use the full page width */
   --maxw: 1100px;
   color-scheme: light;
 }
@@ -84,7 +84,7 @@ a { color: var(--red); text-decoration-thickness: 1px; text-underline-offset: 3p
 img { max-width: 100%; display: block; }
 
 .container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 16px; }
-.measure { max-width: var(--measure); }
+.measure { max-width: var(--measure); margin-left: auto; margin-right: auto; }
 
 /* LaTeX-style numbered sections: "1  Title" */
 .numbered { counter-reset: section; }
@@ -101,7 +101,7 @@ img { max-width: 100%; display: block; }
 }
 
 .abstract {
-  max-width: 58ch;
+  max-width: var(--measure);
   margin: 0 auto 2.5em;
   font-size: 1.05rem;
   text-align: justify;

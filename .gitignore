@@ -8,6 +8,9 @@ node_modules/
 # logs
 npm-debug.log*
 
+# local data exploration (not versioned)
+exploratory/
+
 # environment
 .env
 .env.*

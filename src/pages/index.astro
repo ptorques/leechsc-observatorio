@@ -1,13 +1,42 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Chart from '../components/Chart.astro';
-import {
-  exportSankey,
-  importTreemap,
-  kpis,
-  partnerShare,
-  provinceBubble,
-} from '../data/placeholder';
+import { scChina } from '../data/scChina';
+import { fmt, fmt1 } from '../lib/format';
+
+const { year, tradeYear, kpis, footprint, exportSankey, useSankey } = scChina;
+const pct = (v: number) => `${fmt.format(v * 100)}%`;
+// 1 → "principal", 2 → "segundo"/"segunda"…
+const ordinal = (n: number, fem = false) =>
+  n === 1 ? 'principal' : (['segund', 'terceir', 'quart', 'quint'][n - 2] ?? `${n}º`) + (n <= 5 ? (fem ? 'a' : 'o') : '');
+const bi = (usd: number) => `US$ ${fmt1.format(usd / 1e9)} bi`;
+const biMi = (mi: number) => `US$ ${fmt1.format(mi / 1e3)} bi`;
+const ft = footprint.totals;
+
+// share of one province in SC's direct purchases of a product group
+const purchaseShare = (sector: string, province: string) => {
+  const s = footprint.sectors.find((x) => x.name === sector)!;
+  const i = footprint.provinces.findIndex((p) => p.name === province);
+  return s.purchases[i] / s.purchases.reduce((a, b) => a + b, 0);
+};
+const allPurchases = footprint.sectors[0].purchases;
+const top3Share =
+  [...allPurchases].sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + b, 0) /
+  allPurchases.reduce((a, b) => a + b, 0);
+
+// share of one destination in SC's exports of a product group (export sankey)
+const destShare = (product: string, dest: string) => {
+  const ls = exportSankey.links.filter((l) => l.source === product);
+  return (ls.find((l) => l.target === dest)?.value ?? 0) / ls.reduce((a, l) => a + l.value, 0);
+};
+// China's peak share of SC's exports
+const chinaExports = scChina.partnerShare.exports.find((s) => s.name === 'China')!.values;
+const peak = Math.max(...chinaExports);
+const peakYear = scChina.partnerShare.years[chinaExports.indexOf(peak)];
+
+const COMEX = 'Comex Stat (MDIC). Santa Catarina como UF de origem/destino da mercadoria.';
+const IO =
+  'cálculo do LEECHSC com a matriz insumo-produto inter-regional da China de 2020 (CEADS), o comércio da China com o Brasil por produto e província (Alfândega da China, 2024) e o Comex Stat (MDIC).';
 ---
 
 <BaseLayout active="raison" title="Raison d’être">
@@ -15,82 +44,172 @@ import {
     <section class="abstract">
       <span class="abstract-title smallcaps">Resumo</span>
       <p>
-        <em>Texto provisório.</em> Em pouco mais de duas décadas, a China passou de parceiro
-        marginal a principal parceira comercial de Santa Catarina. Esta página reúne as evidências
-        que motivam o laboratório: a escala dessa relação, sua composição e o que ela significa para
-        a economia catarinense.
+        Em {tradeYear}, {pct(kpis.importShare)} de tudo o que Santa Catarina importou veio da China, que é
+        também o {ordinal(kpis.exportRank)} destino das exportações do estado. Esta página reúne as evidências que
+        motivam o laboratório: a escala dessa relação, a sua composição e — com as matrizes
+        insumo-produto das províncias chinesas — até onde ela alcança dentro da economia chinesa.
       </p>
-      <p class="note">Todas as visualizações desta página usam dados aleatórios provisórios.</p>
     </section>
 
     <section class="sec">
       <h2>O principal parceiro</h2>
       <div class="measure">
-        <p><em>Texto a desenvolver:</em> a ascensão da China no comércio exterior catarinense.</p>
+        <p>
+          A China é a {ordinal(kpis.importRank, true)} origem das importações catarinenses, com {bi(kpis.importsFromChina)} em {tradeYear}: {fmt1.format(kpis.importGrowth)} vezes o valor de 2015. Nas exportações, o peso é menor e oscila mais: {pct(kpis.exportShare)} das vendas do estado em {tradeYear}, atrás apenas dos Estados Unidos, depois de um pico de {fmt.format(peak)}% em {peakYear}.
+        </p>
       </div>
       <dl class="kpis">
-        {
-          kpis.map((k) => (
-            <div>
-              <dt>{k.value}</dt>
-              <dd>{k.label}</dd>
-            </div>
-          ))
-        }
+        <div><dt>{pct(kpis.importShare)}</dt><dd>das importações catarinenses vêm da China ({tradeYear})</dd></div>
+        <div><dt>{fmt1.format(kpis.importGrowth)}×</dt><dd>o valor importado da China em 2015</dd></div>
+        <div><dt>{pct(kpis.exportShare)}</dt><dd>das exportações do estado vão para a China</dd></div>
+        <div>
+          <dt>{bi(kpis.importsFromChina - kpis.exportsToChina)}</dt>
+          <dd>de déficit comercial com a China ({tradeYear})</dd>
+        </div>
       </dl>
       <Chart
         name="partner-share"
-        data={partnerShare}
-        caption="Participação dos principais parceiros na corrente de comércio de Santa Catarina, 2000–2024 (%)."
-      />
-    </section>
-
-    <section class="sec">
-      <h2>Uma província entre províncias</h2>
-      <div class="measure">
-        <p>
-          <em>Texto a desenvolver:</em> em população e renda, Santa Catarina é comparável a uma
-          província chinesa, o que torna a comparação direta possível e informativa.
-        </p>
-      </div>
-      <Chart
-        name="province-bubble"
-        data={provinceBubble}
-        height={460}
-        caption="PIB per capita e crescimento médio das províncias chinesas e de Santa Catarina; o tamanho do círculo indica a população. Passe o cursor sobre um círculo para ver a província e use a roda do mouse para aproximar."
-      />
+        data={scChina.partnerShare}
+        placeholder={false}
+        source={COMEX}
+        caption={`Participação dos principais parceiros no comércio exterior de Santa Catarina, 2015–${tradeYear} (%).`}
+      >
+        <Fragment slot="controls">
+          <button class="btn" data-control="flow" data-value="imports" aria-pressed="true">Importações</button>
+          <button class="btn" data-control="flow" data-value="exports" aria-pressed="false">Exportações</button>
+        </Fragment>
+      </Chart>
     </section>
 
     <section class="sec">
       <h2>Para onde vão nossas exportações</h2>
       <div class="measure">
         <p>
-          <em>Texto a desenvolver:</em> a China absorve parcela dominante das principais
-          exportações do estado.
+          O que Santa Catarina vende à China é concentrado: carnes e soja somam {pct(kpis.meatSoyShare)} do total. A China compra {pct(destShare('Soja e grãos', 'China'))} da soja do estado, mas só {pct(destShare('Carnes', 'China'))} das carnes, que têm no Japão e nas Filipinas compradores tão ou mais importantes. As máquinas, os motores e os produtos de madeira, por outro lado, seguem sobretudo para as Américas e a Europa.
         </p>
       </div>
       <Chart
-        name="export-sankey"
+        name="sankey"
         data={exportSankey}
-        height={480}
-        caption="Fluxo das exportações catarinenses por produto e destino (US$ milhões). Passe o cursor sobre um produto ou destino para destacar seus fluxos."
+        height={520}
+        placeholder={false}
+        source={COMEX}
+        caption={`Exportações catarinenses por grupo de produtos e destino, ${tradeYear} (US$ milhões). Clique em um produto ou destino para isolar seus fluxos; clique de novo para voltar.`}
       />
     </section>
 
     <section class="sec">
-      <h2>O que compramos da China</h2>
+      <h2>A pegada catarinense na China</h2>
       <div class="measure">
         <p>
-          <em>Texto a desenvolver:</em> as importações de origem chinesa e o seu papel nas cadeias
-          produtivas do estado.
+          Cada contêiner que chega a Itajaí ou a São Francisco do Sul carrega mais do que o trabalho da
+          fábrica que o despachou. O aço de um motor pode ter vindo de Hebei, e a energia que o fundiu, do
+          carvão de Shanxi; o frete, o crédito e o comércio que o levaram ao porto também geram renda. A matriz
+          insumo-produto inter-regional da China permite seguir esse rastro: partindo das províncias que
+          exportam o que Santa Catarina compra, ela distribui cada dólar entre todos os setores e
+          províncias que contribuíram para produzi-lo.
+        </p>
+      </div>
+      <dl class="kpis">
+        <div><dt>{biMi(ft.va)}</dt><dd>de valor adicionado gerado na China pelas compras catarinenses</dd></div>
+        <div><dt>{pct(ft.vaOutsideExporters / ft.va)}</dt><dd>desse valor surge fora do elo exportador, nas cadeias internas</dd></div>
+        <div><dt>{ft.provincesOver100}</dt><dd>províncias com mais de US$ 100 milhões de valor adicionado</dd></div>
+        <div><dt>{biMi(ft.foreign)}</dt><dd>remuneram componentes que a própria China importou de outros países</dd></div>
+      </dl>
+      <Chart
+        name="footprint-map"
+        data={footprint}
+        height={460}
+        placeholder={false}
+        source={IO}
+        caption={`Valor adicionado gerado e compras diretas associados às importações catarinenses vindas da China, por província e grupo de produtos, ${year} (US$ milhões). A escala de cores se ajusta a cada seleção. Passe o cursor sobre uma província para ver os detalhes; Taiwan, Hong Kong e Macau não fazem parte da matriz.`}
+      >
+        <Fragment slot="controls">
+          <select data-control="sector" aria-label="Grupo de produtos">
+            {footprint.sectors.map((s) => <option value={s.name}>{s.name}</option>)}
+          </select>
+          <button class="btn" data-control="metric" data-value="va" aria-pressed="true">Valor adicionado</button>
+          <button class="btn" data-control="metric" data-value="purchases" aria-pressed="false">Compras diretas</button>
+        </Fragment>
+      </Chart>
+      <div class="measure">
+        <p>
+          As compras se concentram na costa — Zhejiang, Guangdong e Jiangsu despacham {pct(top3Share)} delas —,
+          mas o valor adicionado se espalha pelo interior: em Henan, Hebei ou Hubei, mais de 80% do que as
+          compras catarinenses geram ali vem de fornecedores das cadeias de outras províncias. Por grupo de
+          produtos, aparecem as especializações. Zhejiang fornece {pct(purchaseShare('Têxteis, vestuário e calçados', 'Zhejiang'))} dos têxteis, sobretudo fios
+          sintéticos de poliéster e náilon, insumo da indústria têxtil do estado; os painéis solares vêm de
+          Jiangsu e Zhejiang; o aço revestido e os conversores elétricos, sobretudo de Guangdong; e os
+          pneus, de Shandong.
+        </p>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>Quem, na China, produz o que compramos</h2>
+      <div class="measure">
+        <p>
+          Lida de trás para frente, a cadeia surpreende. De cada dólar que Santa Catarina paga por
+          eletroeletrônicos chineses, só cerca de um quarto fica com as fábricas chinesas de máquinas e
+          eletrônicos; quase um terço remunera componentes importados de outros países, e o restante se reparte
+          entre metalurgia, química, mineração, energia, comércio, transporte e serviços. Nos têxteis, a
+          agropecuária — o algodão — aparece entre os grandes beneficiários.
         </p>
       </div>
       <Chart
-        name="import-treemap"
-        data={importTreemap}
-        height={460}
-        caption="Composição das importações de Santa Catarina provenientes da China (US$ milhões). Clique em uma categoria para ver seus produtos."
+        name="sankey"
+        data={scChina.vaSankey}
+        height={560}
+        placeholder={false}
+        source={IO}
+        caption={`Valor adicionado incorporado às importações catarinenses vindas da China, por macrorregião e setor de origem e por grupo de produtos importados, ${year} (US$ milhões). Clique em uma região, um setor ou um grupo de produtos para seguir só os seus fluxos; clique de novo para voltar.`}
       />
+    </section>
+
+    <section class="sec">
+      <h2>Do porto à mesa</h2>
+      <div class="measure">
+        <p>
+          No sentido inverso, a mesma matriz sugere o destino do que Santa Catarina vende. A carne — suína
+          e de frango — entra sobretudo por importadores de Guangdong, Xangai e Shandong e segue para a
+          mesa das famílias e, em menor medida, para a indústria de alimentos e os restaurantes. A soja se
+          espalha pelos polos de esmagamento do litoral, de Jiangsu, Shandong e Xangai a Tianjin, de onde
+          saem o óleo de cozinha e o farelo que alimenta a pecuária chinesa. Madeira e celulose seguem
+          para Zhejiang, Fujian e Shandong e abastecem a indústria e a construção.
+        </p>
+      </div>
+      <Chart
+        name="sankey"
+        data={useSankey}
+        height={560}
+        placeholder={false}
+        source={IO}
+        caption={`Exportações catarinenses para a China, por produto, província importadora e uso provável na economia chinesa, ${year} (US$ milhões). Clique em um produto, uma província ou um uso para isolar seus fluxos; clique de novo para voltar.`}
+      />
+    </section>
+
+    <section class="sec method">
+      <h2>Nota metodológica</h2>
+      <div class="measure">
+        <p>
+          Cada produto (SH6) importado por Santa Catarina em {year} (Comex Stat) foi distribuído entre as
+          províncias chinesas segundo a participação de cada uma nas exportações da China desse mesmo
+          produto para o Brasil (Alfândega da China) e associado aos 42 setores da matriz por uma
+          correspondência no nível de capítulo. O valor
+          adicionado resulta do modelo de Leontief aplicado à matriz inter-regional de 2020 do CEADS; a
+          parcela restante corresponde a insumos importados de outros países. No sentido inverso, cada produto exportado (SH6) foi
+          distribuído entre as províncias segundo as importações chinesas desse mesmo produto vindas do
+          Brasil (Alfândega da China) e repartido entre usos na proporção em
+          que cada província usa o produto correspondente — exceto a soja em grão, atribuída inteiramente
+          à indústria de alimentos (esmagamento), já que a matriz não a separa do resto da agropecuária.
+        </p>
+        <p>
+          As seções 1 e 2 usam o Comex Stat de {tradeYear}; as seções 3 a 5 usam {year}, o ano mais recente
+          dos dados da Alfândega da China por província. A alfândega registra a província da empresa exportadora ou importadora, não a da produção ou do
+          consumo: tradings sediadas em Xangai, Pequim ou Guangdong podem responder por fluxos de outras
+          regiões. O código está em <code>analysis/sc_china.py</code>.
+        </p>
+      </div>
     </section>
   </article>
 </BaseLayout>
@@ -101,15 +220,19 @@ import {
 
   .kpis {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    margin: 2em 0 0;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    max-width: var(--measure);
+    margin: 2em auto 0;
     border-top: 1px solid var(--text);
     border-bottom: 1px solid var(--text);
   }
   .kpis div { padding: 18px 16px; text-align: center; }
   .kpis div + div { border-left: 1px solid var(--border); }
-  .kpis dt { font-size: 2.1rem; color: var(--red); line-height: 1.1; }
+  .kpis dt { font-size: 1.95rem; color: var(--red); line-height: 1.1; white-space: nowrap; }
   .kpis dd { margin: 6px 0 0; font-size: 0.92rem; color: var(--muted); }
+  .sec p { text-align: justify; }
+  .method .measure { font-size: 0.95rem; color: var(--muted); }
+  code { font-size: 0.88em; }
   @media (max-width: 640px) {
     .kpis div + div { border-left: 0; border-top: 1px solid var(--border); }
   }

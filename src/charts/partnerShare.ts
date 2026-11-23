@@ -1,11 +1,12 @@
-import type { PartnerShare } from '../data/placeholder';
+import type { PartnerShare } from '../data/scChina';
 import { baseOption, categoryAxis, tooltip, valueAxis } from '../lib/charts';
 import { fmt1 } from '../lib/format';
 import type { Builder, Params } from './types';
 
-/** 100% stacked area: each partner's share of SC trade, China on the bottom. */
-export const partnerShare: Builder<PartnerShare> = ({ data }, t) => {
+/** 100% stacked area: each partner's share of SC imports or exports, China on the bottom. */
+export const partnerShare: Builder<PartnerShare> = ({ data, control }, t) => {
   const colors = [t.red, t.slate, t.ochre, t.green, t.taupe];
+  const series = control('flow') === 'exports' ? data.exports : data.imports;
   return {
     ...baseOption(t),
     tooltip: tooltip(t, {
@@ -15,7 +16,7 @@ export const partnerShare: Builder<PartnerShare> = ({ data }, t) => {
     }),
     xAxis: categoryAxis(t, { data: data.years, boundaryGap: false }),
     yAxis: valueAxis(t, { max: 100, axisLabel: { color: t.muted, formatter: '{value}%' } }),
-    series: data.series.map((s, i) => ({
+    series: series.map((s, i) => ({
       name: s.name,
       type: 'line',
       stack: 'share',

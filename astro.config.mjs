@@ -10,6 +10,6 @@ export default defineConfig({
   trailingSlash: 'ignore',
   vite: {
     // ECharts is one shared ~190 kB (gzipped) chunk, loaded only on pages with charts.
-    build: { chunkSizeWarningLimit: 700 },
+    build: { chunkSizeWarningLimit: 800 },
   },
 });

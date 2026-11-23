@@ -30,7 +30,10 @@ src/
     sobre.astro          aba "Sobre nós": apresentação e equipe
   content/projects/      um .md por projeto ativo (texto + metadados)
   data/
-    placeholder.ts       ⚠️ dados aleatórios provisórios de todos os gráficos
+    sc-china.json        dados reais SC × China (gerado por analysis/sc_china.py; não editar à mão)
+    scChina.ts           tipos e importação do JSON acima
+    china-geo.json       contornos simplificados das províncias (gerado por analysis/china_map.py)
+    placeholder.ts       ⚠️ dados aleatórios provisórios (gráficos dos projetos)
     team.ts              membros da equipe
   charts/                um "builder" por gráfico + registro (index.ts)
   components/
@@ -41,11 +44,32 @@ src/
   lib/charts.ts          configuração compartilhada do ECharts (lê as cores do CSS)
   styles/global.css      tema: tokens de cor, tipografia
 public/team/             fotos da equipe
+analysis/
+  sc_china.py            pipeline de dados da aba "Raison d'être"
+  china_map.py           simplifica exploratory/cn.json para o mapa
+exploratory/             dados brutos e rascunhos locais (fora do git)
 ```
+
+## Dados
+
+A aba "Raison d'être" usa dados reais, preparados por `analysis/sc_china.py`:
+
+- **Comex Stat (MDIC)**: comércio de SC por capítulo SH e país, 2015–2025 (seções 1 e 2), e por produto NCM em 2024 (seções 3 a 5, o ano dos dados da Alfândega da China). O ano de cada parte fica em `TRADE_YEAR` e `YEAR` no topo do script. O script baixa pela API pública e guarda uma cópia em `exploratory/comex_*.csv` (apague-as para baixar de novo). Na API, Santa Catarina é o código **44**, não o 42 do IBGE (que lá é o Paraná).
+- **Alfândega da China**: comércio de cada província por capítulo SH (`exploratory/Pauta_provincias_China_SH2_2015_2019_2024 (2).xlsx`).
+- **Alfândega da China × Brasil**: comércio da China com o Brasil por SH6 e província do importador/exportador, 2024, baixado em [stats.customs.gov.cn](http://stats.customs.gov.cn) (parceiro Brasil × produto SH6 × local de registro). Ficam em `exploratory/Importações BR-CH*.csv` e `exploratory/Exportações BR-CH*.csv`; a consulta devolve no máximo 10 mil linhas, então um fluxo pode vir em vários arquivos (o script junta todos).
+- **CEADS**: matriz insumo-produto inter-regional da China, 31 províncias × 42 setores, 2020 (`exploratory/MIP por província - 2020.xlsx`).
+
+Com esses arquivos em `exploratory/`, rode a partir da raiz (Python 3 com pandas, numpy e openpyxl):
+
+```sh
+python analysis/sc_china.py
+```
+
+O script grava `src/data/sc-china.json` e imprime um resumo para conferência. O mapa usa `src/data/china-geo.json`, gerado por `python analysis/china_map.py` a partir de `exploratory/cn.json` (GeoJSON das províncias, simplemaps.com, ~7,5 MB) (simplifica as fronteiras sem abrir frestas entre províncias vizinhas); o navegador só baixa esse arquivo quando o mapa entra na tela. A nota metodológica no fim da página descreve as hipóteses (correspondência SH → setor, alocação por província, Leontief).
 
 ## Tarefas comuns
 
-**Trocar dados aleatórios por reais**: substitua a exportação correspondente em `src/data/placeholder.ts` mantendo o mesmo formato (os tipos indicam qual é) e remova `placeholder` do `<Chart>` para tirar o aviso "(dados ilustrativos)".
+**Trocar dados aleatórios por reais**: gere os dados no pipeline de `analysis/`, mantendo o formato que o builder espera (os tipos indicam qual é), e passe `placeholder={false}` e `source="…"` ao `<Chart>` para tirar o aviso "(dados ilustrativos)" e citar a fonte.
 
 **Adicionar um gráfico**:
 1. Crie `src/charts/meuGrafico.ts` exportando um `Builder` (veja os existentes).

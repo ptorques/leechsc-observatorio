@@ -2,42 +2,52 @@
 // small; register more chart types/components here as new visualizations need them.
 import * as echarts from 'echarts/core';
 import {
+  BarChart,
   LineChart,
+  MapChart,
   RadarChart,
   SankeyChart,
   ScatterChart,
-  TreemapChart,
 } from 'echarts/charts';
 import {
   DataZoomComponent,
+  GeoComponent,
+  GraphicComponent,
   GridComponent,
   LegendComponent,
   MarkAreaComponent,
   MarkLineComponent,
   RadarComponent,
   TooltipComponent,
+  VisualMapContinuousComponent,
 } from 'echarts/components';
 import { LabelLayout } from 'echarts/features';
 import { SVGRenderer } from 'echarts/renderers';
 
 echarts.use([
+  BarChart,
   LineChart,
+  MapChart,
   RadarChart,
   SankeyChart,
   ScatterChart,
-  TreemapChart,
   DataZoomComponent,
+  GeoComponent,
+  GraphicComponent,
   GridComponent,
   LegendComponent,
   MarkAreaComponent,
   MarkLineComponent,
   RadarComponent,
   TooltipComponent,
+  VisualMapContinuousComponent,
   LabelLayout,
   SVGRenderer,
 ]);
 
 export type ChartOption = echarts.EChartsCoreOption;
+export type ChartInstance = echarts.ECharts;
+export const registerMap = echarts.registerMap;
 
 export interface Tokens {
   bg: string;
@@ -146,12 +156,28 @@ export function slider(t: Tokens, extra: Record<string, unknown> = {}) {
 
 /**
  * Mounts a chart into `el`. `build` receives the color tokens and returns the
- * option. Returns a function that re-renders (merging, so changes animate).
+ * option. Returns the instance and a function that re-renders (merging, so
+ * changes animate).
  */
-export function mountChart(el: HTMLElement, build: (t: Tokens) => ChartOption) {
+export function mountChart(
+  el: HTMLElement,
+  build: (t: Tokens) => ChartOption,
+  { rebuildOnResize = false } = {},
+) {
   const chart = echarts.init(el, undefined, { renderer: 'svg' });
   const tokens = readTokens();
   chart.setOption(build(tokens));
-  new ResizeObserver(() => chart.resize()).observe(el);
-  return () => chart.setOption(build(tokens));
+  new ResizeObserver(() => {
+    chart.resize();
+    if (rebuildOnResize) chart.setOption(build(tokens));
+  }).observe(el);
+  return { chart, rerender: () => chart.setOption(build(tokens)) };
+}
+
+/** Linear blend between two `#rrggbb` colors (`k` from 0 to 1). */
+export function mix(a: string, b: string, k: number): string {
+  const p = (h: string) => parseInt(h.replace('#', ''), 16);
+  const [x, y] = [p(a), p(b)];
+  const ch = (s: number) => Math.round(((x >> s) & 255) * (1 - k) + ((y >> s) & 255) * k);
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
 }

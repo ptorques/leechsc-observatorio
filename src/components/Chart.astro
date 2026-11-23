@@ -15,8 +15,10 @@ interface Props {
   height?: number;
   /** marks the figure as using provisional random data */
   placeholder?: boolean;
+  /** data source, shown after the caption ("Fonte: …") */
+  source?: string;
 }
-const { name, data, caption, height = 420, placeholder = true } = Astro.props;
+const { name, data, caption, height = 420, placeholder = true, source } = Astro.props;
 ---
 
 <figure class="figure" data-chart-root>
@@ -34,6 +36,7 @@ const { name, data, caption, height = 420, placeholder = true } = Astro.props;
     <span class="label">Figura <span class="num"></span>.</span>
     {caption}
     {placeholder && <span class="ph">(dados ilustrativos)</span>}
+    {source && <span class="src">Fonte: {source}</span>}
   </figcaption>
 </figure>
 
@@ -58,15 +61,18 @@ const { name, data, caption, height = 420, placeholder = true } = Astro.props;
   @media (max-width: 640px) {
     .chart { height: 340px !important; }
   }
+  /* the chart spans the page; the caption keeps the text column */
   figcaption {
-    margin: 10px auto 0;
-    max-width: 62ch;
+    max-width: var(--measure);
+    margin: 12px auto 0;
     font-size: 0.95rem;
-    text-align: center;
+    text-align: justify;
+    hyphens: auto;
     line-height: 1.45;
   }
   .label { font-weight: 700; margin-right: 0.35em; }
   .ph { margin-left: 0.3em; }
   .num::before { content: counter(figure); }
   .ph { color: var(--muted); font-style: italic; }
+  .src { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
 </style>
