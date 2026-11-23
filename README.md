@@ -11,7 +11,7 @@ Site do Laboratório Santa Catarina–China (UFSC · Instituto I-Chin): por que 
 
 ## Começando
 
-Requer Node.js 22 ou superior.
+Requer Node.js 22.23.4 ou superior (recomendado: Node 24).
 
 ```sh
 npm install
