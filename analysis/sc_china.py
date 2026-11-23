@@ -392,16 +392,25 @@ footprint = {
 # que passam por ele. As ligações agregadas não bastam para isso (a ligação
 # setor → produto não diz de que região veio), então essas vistas são calculadas
 # aqui, a partir de cada caminho (esquerda, meio, direita, valor em US$).
-def end_views(paths: dict[tuple[str, str, str], float], min_v: float = 1e5) -> dict[str, list[dict]]:
+# Mesmo limite para a vista geral e para as vistas, e só ligações entre nós
+# desenhados: o site anima a partir das ligações da vista geral, então uma ligação
+# que só existisse na vista sumiria e deixaria um nó com entrada e sem saída.
+MIN_LINK = 1e4  # US$ 10 mil
+
+def sankey_links(lk: dict[tuple[str, str], float], nodes: set[str]) -> list[dict]:
+    return [{"source": a, "target": b, "value": round(v / 1e6, 2)} for (a, b), v in lk.items()
+            if v >= MIN_LINK and a in nodes and b in nodes]
+
+def end_views(paths: dict[tuple[str, str, str], float], nodes: set[str]) -> dict[str, list[dict]]:
     views = {}
     for pos in (0, 2):
-        for node in {k[pos] for k in paths}:
+        for node in {k[pos] for k in paths} & nodes:
             lk: dict[tuple[str, str], float] = {}
             for (a, b, c), v in paths.items():
                 if (a, b, c)[pos] == node:
                     lk[(a, b)] = lk.get((a, b), 0) + v
                     lk[(b, c)] = lk.get((b, c), 0) + v
-            views[node] = [{"source": a, "target": b, "value": round(v / 1e6, 1)} for (a, b), v in lk.items() if v >= min_v]
+            views[node] = sankey_links(lk, nodes)
     return views
 
 # --- 5. Sankey: região de origem → setor de origem → produto comprado por SC ---
@@ -425,14 +434,13 @@ for (a, b, c), v in va_paths.items():
     links[(b, c)] = links.get((b, c), 0) + v
 regions = ["Leste", "Centro", "Oeste", "Nordeste", "Exterior"]
 sectors = [n for n, _ in SECTOR_GROUPS] + ["Insumos importados"]
-kept = {key: v for key, v in links.items() if v >= 1e6}
 va_sankey = {
     "unit": "US$ mi",
     "nodes": [{"name": r, "kind": "other" if r == "Exterior" else "china"} for r in regions]
     + [{"name": x, "kind": "other" if x == "Insumos importados" else "neutral"} for x in sectors]
     + [{"name": g, "kind": "sc"} for g in groups],
-    "links": [{"source": a, "target": b, "value": round(v / 1e6, 1)} for (a, b), v in kept.items()],
-    "views": end_views(va_paths),
+    "links": sankey_links(links, set(regions) | set(sectors) | set(groups)),
+    "views": end_views(va_paths, set(regions) | set(sectors) | set(groups)),
 }
 
 # --- 6. Sankey: exportações de SC → província importadora → uso na China ---
@@ -502,10 +510,13 @@ use_sankey = {
     "unit": "US$ mi",
     "nodes": [{"name": n, "kind": "sc"} for n in prods]
     + [{"name": n, "kind": "china"} for n in provs]
-    + [{"name": n, "kind": "neutral"} for n in uses if any(b == n and v >= 1e6 for (a, b), v in flow3.items())],
-    "links": [{"source": a, "target": b, "value": round(v / 1e6, 1)} for (a, b), v in flow3.items() if v >= 1e6],
+    + [{"name": n, "kind": "neutral"} for n in uses if sum(v for (a, b), v in flow3.items() if b == n) >= 1e6],
 }
-use_sankey["views"] = {k: v for k, v in end_views(use_paths).items() if k in {n["name"] for n in use_sankey["nodes"]}}
+use_nodes = {n["name"] for n in use_sankey["nodes"]}
+use_sankey["links"] = sankey_links(flow3, use_nodes)
+use_sankey["views"] = end_views(use_paths, use_nodes)
+dropped = sum(v for (a, b, c), v in use_paths.items() if c not in use_nodes)
+print(f"usos pequenos demais para o gráfico: US$ {dropped / 1e6:.2f} mi")
 
 data = {
     "year": int(YEAR),

@@ -41,7 +41,8 @@ export const sankey: Builder<Flow> = ({ data, root, state }, t) => {
     .filter((n) => !(n in into))
     .reduce((a, n) => a + out[n], 0);
   const visible = (name: string) => Math.max(into[name] ?? 0, out[name] ?? 0) > total * 0.004;
-  const empty = (v: number) => v <= total * 0.0005;
+  // only links that are (practically) zero, e.g. at the end of a transition; small real links stay
+  const empty = (v: number) => v <= total * 1e-6;
 
   // room on the right for the labels of the last layer (nodes without outgoing links)
   const sources = new Set(data.links.map((l) => l.source));
