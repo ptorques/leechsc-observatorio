@@ -4,9 +4,13 @@ import { fmt1, yearLabel } from '../lib/format';
 import type { Builder, Params } from './types';
 
 /** Long-run urbanization line with alternating dynasty bands; zoom with the slider. */
-export const urbanHistory: Builder<UrbanHistory> = ({ data }, t) => {
+export const urbanHistory: Builder<UrbanHistory> = ({ data, root }, t) => {
   const first = data.points[0][0];
   const last = data.points[data.points.length - 1][0];
+  // years per pixel of plot width: a band gets its name only if it has room for it
+  const yearsPerPx = (last - first) / Math.max(200, root.clientWidth - 60);
+  const fits = (e: { name: string; start: number; end: number }) =>
+    (e.end - Math.max(e.start, first)) / yearsPerPx > e.name.length * 7 + 8;
   return {
     ...baseOption(t),
     legend: { show: false },
@@ -41,7 +45,7 @@ export const urbanHistory: Builder<UrbanHistory> = ({ data }, t) => {
           silent: true,
           data: data.eras.map((e, i) => [
             {
-              name: e.end - e.start >= 80 ? e.name : '',
+              name: fits(e) ? e.name : '',
               xAxis: Math.max(e.start, first),
               itemStyle: { color: i % 2 ? alpha(t.green, 0.1) : 'transparent' },
               label: { color: t.green, fontFamily: t.font, fontSize: 12, position: 'insideTop' },
@@ -53,3 +57,4 @@ export const urbanHistory: Builder<UrbanHistory> = ({ data }, t) => {
     ],
   };
 };
+urbanHistory.rebuildOnResize = true;

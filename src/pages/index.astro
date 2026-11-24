@@ -40,7 +40,7 @@ const IO =
 ---
 
 <BaseLayout active="raison" title="Raison d’être">
-  <article class="numbered">
+  <article class="numbered draft-text justify-wide">
     <section class="abstract">
       <span class="abstract-title smallcaps">Resumo</span>
       <p>
@@ -58,7 +58,7 @@ const IO =
           A China é a {ordinal(kpis.importRank, true)} origem das importações catarinenses, com {bi(kpis.importsFromChina)} em {tradeYear}: {fmt1.format(kpis.importGrowth)} vezes o valor de 2015. Nas exportações, o peso é menor e oscila mais: {pct(kpis.exportShare)} das vendas do estado em {tradeYear}, atrás apenas dos Estados Unidos, depois de um pico de {fmt.format(peak)}% em {peakYear}.
         </p>
       </div>
-      <dl class="kpis">
+      <dl class="kpis draft">
         <div><dt>{pct(kpis.importShare)}</dt><dd>das importações catarinenses vêm da China ({tradeYear})</dd></div>
         <div><dt>{fmt1.format(kpis.importGrowth)}×</dt><dd>o valor importado da China em 2015</dd></div>
         <div><dt>{pct(kpis.exportShare)}</dt><dd>das exportações do estado vão para a China</dd></div>
@@ -91,6 +91,7 @@ const IO =
       <Chart
         name="sankey"
         data={exportSankey}
+        mobileHeight={560}
         height={520}
         placeholder={false}
         source={COMEX}
@@ -110,7 +111,7 @@ const IO =
           províncias que contribuíram para produzi-lo.
         </p>
       </div>
-      <dl class="kpis">
+      <dl class="kpis draft">
         <div><dt>{biMi(ft.va)}</dt><dd>de valor adicionado gerado na China pelas compras catarinenses</dd></div>
         <div><dt>{pct(ft.vaOutsideExporters / ft.va)}</dt><dd>desse valor surge fora do elo exportador, nas cadeias internas</dd></div>
         <div><dt>{ft.provincesOver100}</dt><dd>províncias com mais de US$ 100 milhões de valor adicionado</dd></div>
@@ -119,6 +120,7 @@ const IO =
       <Chart
         name="footprint-map"
         data={footprint}
+        mobileHeight={380}
         height={460}
         placeholder={false}
         source={IO}
@@ -159,6 +161,7 @@ const IO =
       <Chart
         name="sankey"
         data={scChina.vaSankey}
+        mobileHeight={600}
         height={560}
         placeholder={false}
         source={IO}
@@ -181,6 +184,7 @@ const IO =
       <Chart
         name="sankey"
         data={useSankey}
+        mobileHeight={600}
         height={560}
         placeholder={false}
         source={IO}
@@ -228,9 +232,11 @@ const IO =
   }
   .kpis div { padding: 18px 16px; text-align: center; }
   .kpis div + div { border-left: 1px solid var(--border); }
+  /* the draft tag of a KPI row sits on its top rule, at the right */
+  .kpis.draft { position: relative; }
+  .kpis.draft::after { position: absolute; top: -0.8em; right: 0; margin: 0; }
   .kpis dt { font-size: 1.95rem; color: var(--red); line-height: 1.1; white-space: nowrap; }
   .kpis dd { margin: 6px 0 0; font-size: 0.92rem; color: var(--muted); }
-  .sec p { text-align: justify; }
   .method .measure { font-size: 0.95rem; color: var(--muted); }
   code { font-size: 0.88em; }
   @media (max-width: 640px) {

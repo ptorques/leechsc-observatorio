@@ -17,8 +17,10 @@ interface Props {
   placeholder?: boolean;
   /** data source, shown after the caption ("Fonte: …") */
   source?: string;
+  /** height on phones (≤ 640 px wide); tall charts such as sankeys need more than the default */
+  mobileHeight?: number;
 }
-const { name, data, caption, height = 420, placeholder = true, source } = Astro.props;
+const { name, data, caption, height = 420, placeholder = true, source, mobileHeight = 340 } = Astro.props;
 ---
 
 <figure class="figure" data-chart-root>
@@ -27,14 +29,14 @@ const { name, data, caption, height = 420, placeholder = true, source } = Astro.
     class="chart"
     data-chart={name}
     data-payload={JSON.stringify(data)}
-    style={`height:${height}px`}
+    style={`--h:${height}px;--h-mobile:${mobileHeight}px`}
     role="img"
     aria-label={caption}
   >
   </div>
   <figcaption>
     <span class="label">Figura <span class="num"></span>.</span>
-    {caption}
+    <span class="cap">{caption}</span>
     {placeholder && <span class="ph">(dados ilustrativos)</span>}
     {source && <span class="src">Fonte: {source}</span>}
   </figcaption>
@@ -57,18 +59,20 @@ const { name, data, caption, height = 420, placeholder = true, source } = Astro.
     margin-bottom: 8px;
     font-size: 0.92rem;
   }
-  .chart { width: 100%; }
+  .chart { width: 100%; height: var(--h); }
   @media (max-width: 640px) {
-    .chart { height: 340px !important; }
+    .chart { height: var(--h-mobile); }
   }
   /* the chart spans the page; the caption keeps the text column */
   figcaption {
     max-width: var(--measure);
     margin: 12px auto 0;
     font-size: 0.95rem;
-    text-align: justify;
     hyphens: auto;
     line-height: 1.45;
+  }
+  @media (min-width: 641px) {
+    figcaption { text-align: justify; }
   }
   .label { font-weight: 700; margin-right: 0.35em; }
   .ph { margin-left: 0.3em; }

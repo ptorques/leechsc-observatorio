@@ -7,7 +7,9 @@ const year = new Date().getFullYear();
 <footer class="site-footer">
   <div class="container inner">
     <p class="smallcaps">{t('site.title')}</p>
-    <p class="muted">{t('site.subtitle')} · {year}</p>
+    <p class="muted">
+      {[...t('site.subtitle').split(' · '), String(year)].map((part, i) => <>{i > 0 && ' · '}<span class="part">{part}</span></>)}
+    </p>
   </div>
 </footer>
 
@@ -16,4 +18,5 @@ const year = new Date().getFullYear();
   .inner { text-align: center; font-size: 0.92rem; }
   p { margin: 0 0 4px; }
   .muted { color: var(--muted); }
+  .part { white-space: nowrap; }
 </style>

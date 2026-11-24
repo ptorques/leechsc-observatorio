@@ -15,13 +15,13 @@ const initials = (name: string) =>
 
 <BaseLayout active="about" title="Sobre nós">
   <article class="about">
-    <section class="measure intro">
+    <section class="measure intro draft-text">
       <p class="lead">
         Somos um laboratório de pesquisa sediado na <strong>Universidade Federal de Santa Catarina
         (UFSC)</strong>, vinculado ao <strong>Instituto I-Chin</strong>.
       </p>
       <p>
-        <em>Texto provisório.</em> Estudamos as relações econômicas entre Santa Catarina e a China
+        Estudamos as relações econômicas entre Santa Catarina e a China
         e a economia política chinesa, combinando dados, métodos quantitativos e perspectiva
         histórica.
       </p>
@@ -29,7 +29,7 @@ const initials = (name: string) =>
 
     <section>
       <h2 class="measure">Equipe</h2>
-      <ul class="team">
+      <ul class="team draft-text">
         {
           team.map((m) => (
             <li>
@@ -55,13 +55,15 @@ const initials = (name: string) =>
   h2.measure { margin: 0 auto 1.2em; }
   .team {
     list-style: none;
-    margin: 0;
+    max-width: var(--measure);
+    margin: 0 auto;
     padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 40px 24px;
   }
-  .team li { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .team li { width: 170px; display: flex; flex-direction: column; align-items: center; text-align: center; }
   .photo {
     width: 140px;
     height: 140px;
@@ -79,5 +81,10 @@ const initials = (name: string) =>
     font-size: 2.2rem;
   }
   .name { font-weight: 700; }
+  @media (max-width: 480px) {
+    .team { gap: 32px 16px; }
+    .team li { width: 140px; }
+    .photo { width: 112px; height: 112px; }
+  }
   .role { color: var(--green); font-size: 0.95rem; }
 </style>

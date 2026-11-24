@@ -104,13 +104,40 @@ img { max-width: 100%; display: block; }
   max-width: var(--measure);
   margin: 0 auto 2.5em;
   font-size: 1.05rem;
-  text-align: justify;
+}
+/* justified text only where lines are long enough; on phones it opens wide gaps */
+@media (min-width: 641px) {
+  .abstract, .justify-wide p { text-align: justify; }
+}
+@media (max-width: 640px) {
+  body { font-size: 1.0625rem; }
+  h2 { font-size: 1.4rem; }
 }
 .abstract-title {
   display: block;
   text-align: center;
   font-weight: 700;
   margin-bottom: 0.4em;
+}
+
+/* Draft text written for the first version, still to be reviewed by the team:
+   a small "provisório" tag after it. Remove the class once a text is final. */
+.draft-text :is(p, h2, .cap, .role)::after,
+.draft::after {
+  content: 'provisório';
+  display: inline-block;
+  margin-left: 0.6em;
+  padding: 0 0.5em;
+  border: 1px solid var(--ochre);
+  border-radius: 3px;
+  color: var(--ochre);
+  background: var(--bg);
+  font: 400 0.68rem/1.5 var(--serif);
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 0.15em;
+  white-space: nowrap;
 }
 
 .note {

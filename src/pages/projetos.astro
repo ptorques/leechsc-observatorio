@@ -15,7 +15,7 @@ const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (awa
     {
       rendered.map(({ p, Content }, i) => (
         <section class:list={['project', { flip: i % 2 === 1 }]} id={p.id}>
-          <div class="viz">
+          <div class="viz draft-text">
             <Chart name={p.data.chart} data={projectData[p.data.chart]} caption={p.data.caption} height={380}>
               {p.data.chart === 'sector-radar' && (
                 <label slot="controls">
@@ -38,7 +38,7 @@ const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (awa
               )}
             </Chart>
           </div>
-          <div class="text justify">
+          <div class="text justify-wide draft-text">
             <h2>{p.data.title}</h2>
             {p.data.authors.length > 0 && <p class="authors smallcaps">{p.data.authors.join(', ')}</p>}
             <Content />
@@ -68,9 +68,6 @@ const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (awa
   .project.flip .viz { order: 2; }
   .viz :global(.figure) { margin: 0; }
   .text h2 { font-size: 1.45rem; }
-  @media (min-width: 641px) {
-    .text :global(p) { text-align: justify; }
-  }
   .authors { color: var(--green); margin-top: -0.4em; }
   .article { display: inline-block; margin-top: 0.4em; font-weight: 700; }
   .pending { color: var(--muted); font-weight: 400; font-style: italic; }

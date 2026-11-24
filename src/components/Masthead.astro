@@ -25,7 +25,9 @@ const tabs: { id: Tab; href: string; label: string }[] = [
       <Fragment set:html={dragon} />
     </a>
     <h1 class="title">{t('site.title')}</h1>
-    <p class="subtitle smallcaps">{t('site.subtitle')}</p>
+    <p class="subtitle smallcaps">
+      {t('site.subtitle').split(' · ').map((part, i) => <>{i > 0 && <span class="sep"> · </span>}<span class="part">{part}</span></>)}
+    </p>
     <nav class="tabs" aria-label="Seções">
       {
         tabs.map((tab) => (
@@ -55,6 +57,7 @@ const tabs: { id: Tab; href: string; label: string }[] = [
     margin: 0 0 12px;
   }
   .subtitle { color: var(--green); margin: 0 0 36px; font-size: 1.02rem; }
+  .subtitle .part { white-space: nowrap; }
 
   /* Tabs sit on a double rule, like a LaTeX title block. */
   .tabs {
@@ -87,8 +90,11 @@ const tabs: { id: Tab; href: string; label: string }[] = [
     view-transition-name: tab-underline;
   }
   @media (max-width: 560px) {
-    .masthead { padding-top: 56px; }
-    .logo { width: 60px; height: 60px; }
+    .masthead { padding-top: 44px; }
+    .logo { width: 52px; height: 52px; margin-bottom: 12px; }
+    .subtitle { margin-bottom: 24px; font-size: 0.95rem; }
+    .subtitle .sep { display: none; }
+    .subtitle .part { display: block; }
     .tabs { gap: 4px 22px; }
     .tabs a { font-size: 1rem; }
   }
